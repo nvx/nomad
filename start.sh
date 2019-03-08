@@ -48,22 +48,4 @@ elif nomad --help "$1" 2>&1 | grep -q "nomad $1"; then
     set -- nomad "$@"
 fi
 
-# If we are running Nomad, make sure it executes as the proper user.
-if [ "$1" = 'nomad' ]; then
-    # If the data or config dirs are bind mounted then chown them.
-    # Note: This checks for root ownership as that's the most common case.
-    if [ "$(stat -c %u /nomad/data)" != "$(id -u root)" ]; then
-        chown root:root /etc/nomad
-    fi
-
-    # If requested, set the capability to bind to privileged ports before
-    # we drop to the non-root user. Note that this doesn't work with all
-    # storage drivers (it won't work with AUFS).
-    if [ ! -z ${NOMAD+x} ]; then
-        setcap "cap_net_bind_service=+ep" /bin/nomad
-    fi
-
-    set -- gosu root "$@"
-fi
-
 exec "$@"
