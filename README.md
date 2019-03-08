@@ -28,7 +28,7 @@ docker run -d \
 -v "/opt/nomad:/opt/nomad" \
 -v "/var/run/docker.sock:/var/run/docker.sock" \
 -v "/tmp:/tmp" \
-djenriquez/nomad:v0.6.0 agent
+nvxx/nomad:v0.8.7 agent
 ```
 
 Client:
@@ -52,7 +52,7 @@ docker run -d \
 -v "/opt/nomad:/opt/nomad" \
 -v "/var/run/docker.sock:/var/run/docker.sock" \
 -v "/tmp:/tmp" \
-djenriquez/nomad:v0.6.0 agent
+nvxx/nomad:v0.8.7 agent
 ```
 
 The above command is identical to running this example in Nomad's documentation for [bootstrapping with Consul](https://www.nomadproject.io/docs/cluster/bootstrapping.html).
@@ -76,5 +76,5 @@ docker run \
 ...\
 -v $NOMAD_DATA_DIR:$NOMAD_DATA_DIR:rw \
 -e NOMAD_DATA_DIR=$NOMAD_DATA_DIR \
-djenriquez/nomad:latest agent
+nvxx/nomad:latest agent
 ```
