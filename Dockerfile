@@ -1,74 +1,37 @@
-FROM alpine:3.6
+FROM alpine:3.7
+MAINTAINER NV <neovortex@gmail.com>
 
-LABEL maintainer="DJ Enriquez <denrie.enriquezjr@gmail.com> (@djenriquez)"
+# This is the release of Nomad to pull in.
+ENV NOMAD_VERSION=0.8.7
 
-RUN addgroup nomad && \
-    adduser -S -G nomad nomad
+# This is the location of the releases.
+ENV HASHICORP_RELEASES=https://releases.hashicorp.com
 
-ENV GLIBC_VERSION "2.25-r0"
-ENV GOSU_VERSION 1.10
-ENV DUMB_INIT_VERSION 1.2.0
-
-RUN set -x && \
-    apk --update add --no-cache --virtual .gosu-deps dpkg curl gnupg && \
-    curl -L -o /tmp/glibc-${GLIBC_VERSION}.apk https://github.com/andyshinn/alpine-pkg-glibc/releases/download/${GLIBC_VERSION}/glibc-${GLIBC_VERSION}.apk && \
-    apk add --allow-untrusted /tmp/glibc-${GLIBC_VERSION}.apk && \
-    rm -rf /tmp/glibc-${GLIBC_VERSION}.apk /var/cache/apk/* && \
-    curl -L -o /usr/local/bin/dumb-init https://github.com/Yelp/dumb-init/releases/download/v${DUMB_INIT_VERSION}/dumb-init_${DUMB_INIT_VERSION}_amd64 && \
-    chmod +x /usr/local/bin/dumb-init && \
-    dpkgArch="$(dpkg --print-architecture | awk -F- '{ print $NF }')" && \
-    curl -L -o /usr/local/bin/gosu "https://github.com/tianon/gosu/releases/download/$GOSU_VERSION/gosu-$dpkgArch" && \
-    curl -L -o /usr/local/bin/gosu.asc "https://github.com/tianon/gosu/releases/download/$GOSU_VERSION/gosu-$dpkgArch.asc" && \
-    export GNUPGHOME="$(mktemp -d)" && \
-    for keyserver in $(shuf -e \
-    		ha.pool.sks-keyservers.net \
-    		hkp://p80.pool.sks-keyservers.net:80 \
-    		keyserver.ubuntu.com \
-    		hkp://keyserver.ubuntu.com:80 \
-    		pgp.mit.edu) ; do \
-    	gpg --keyserver $keyserver --recv-keys B42F6819007F00F88E364FD4036A9C25BF357DD4 && break || true ; \
-    done && \
-    gpg --batch --verify /usr/local/bin/gosu.asc /usr/local/bin/gosu && \
-    rm -rf "$GNUPGHOME" /usr/local/bin/gosu.asc && \
-    chmod +x /usr/local/bin/gosu && \
-    gosu nobody true && \
-    apk del .gosu-deps
-
-ENV NOMAD_VERSION 0.8.7
-
-RUN set -x \
-  && apk --update add --no-cache --virtual .nomad-deps gnupg curl \
-  && cd /tmp \
-  && curl -L -o nomad_${NOMAD_VERSION}_linux_amd64.zip https://releases.hashicorp.com/nomad/${NOMAD_VERSION}/nomad_${NOMAD_VERSION}_linux_amd64.zip \
-  && curl -L -o nomad_${NOMAD_VERSION}_SHA256SUMS      https://releases.hashicorp.com/nomad/${NOMAD_VERSION}/nomad_${NOMAD_VERSION}_SHA256SUMS \
-  && curl -L -o nomad_${NOMAD_VERSION}_SHA256SUMS.sig  https://releases.hashicorp.com/nomad/${NOMAD_VERSION}/nomad_${NOMAD_VERSION}_SHA256SUMS.sig \
-  && export GNUPGHOME="$(mktemp -d)" \
-  && for keyserver in $(shuf -e \
-    		ha.pool.sks-keyservers.net \
-    		hkp://p80.pool.sks-keyservers.net:80 \
-    		keyserver.ubuntu.com \
-    		hkp://keyserver.ubuntu.com:80 \
-    		pgp.mit.edu) ; do \
-    	gpg --keyserver $keyserver --recv-keys 91A6E7F85D05C65630BEF18951852D87348FFC4C && break || true ; \
-  done \
-  && gpg --batch --verify nomad_${NOMAD_VERSION}_SHA256SUMS.sig nomad_${NOMAD_VERSION}_SHA256SUMS \
-  && grep nomad_${NOMAD_VERSION}_linux_amd64.zip nomad_${NOMAD_VERSION}_SHA256SUMS | sha256sum -c \
-  && unzip -d /bin nomad_${NOMAD_VERSION}_linux_amd64.zip \
-  && chmod +x /bin/nomad \
-  && rm -rf "$GNUPGHOME" nomad_${NOMAD_VERSION}_linux_amd64.zip nomad_${NOMAD_VERSION}_SHA256SUMS nomad_${NOMAD_VERSION}_SHA256SUMS.sig \
-  && apk del .nomad-deps
-  
-RUN set -x \
-  && apk --update add --no-cache ca-certificates openssl \
-  && update-ca-certificates
-
+RUN set -eux && \
+  apk add --no-cache curl gnupg openssl ca-certificates && \
+  gpg --keyserver pgp.mit.edu --recv-keys 91A6E7F85D05C65630BEF18951852D87348FFC4C && \
+  mkdir -p /tmp/build && \
+  cd /tmp/build && \
+  curl -L -o nomad_${NOMAD_VERSION}_linux_amd64.zip ${HASHICORP_RELEASES}/nomad/${NOMAD_VERSION}/nomad_${NOMAD_VERSION}_linux_amd64.zip && \
+  curl -L -o nomad_${NOMAD_VERSION}_SHA256SUMS      ${HASHICORP_RELEASES}/nomad/${NOMAD_VERSION}/nomad_${NOMAD_VERSION}_SHA256SUMS && \
+  curl -L -o nomad_${NOMAD_VERSION}_SHA256SUMS.sig  ${HASHICORP_RELEASES}/nomad/${NOMAD_VERSION}/nomad_${NOMAD_VERSION}_SHA256SUMS.sig && \
+  gpg --batch --verify nomad_${NOMAD_VERSION}_SHA256SUMS.sig nomad_${NOMAD_VERSION}_SHA256SUMS && \
+  grep nomad_${NOMAD_VERSION}_linux_amd64.zip nomad_${NOMAD_VERSION}_SHA256SUMS | sha256sum -c && \
+  unzip -d /bin nomad_${NOMAD_VERSION}_linux_amd64.zip && \
+  chmod +x /bin/nomad && \
+  cd /tmp && \
+  rm -rf /tmp/build && \
+  apk del gnupg openssl && \
+  rm -rf /root/.gnupg && \
+  # tiny smoke test to ensure the binary we downloaded runs
+  nomad version
 
 RUN mkdir -p /nomad/data && \
-    mkdir -p /etc/nomad && \
-    chown -R nomad:nomad /nomad
+    mkdir -p /etc/nomad
 
 EXPOSE 4646 4647 4648 4648/udp
 
 ADD start.sh /usr/local/bin/start.sh
 
-ENTRYPOINT ["/usr/local/bin/start.sh"]
+COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+ENTRYPOINT ["docker-entrypoint.sh"]
