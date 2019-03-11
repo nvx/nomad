@@ -9,7 +9,7 @@ ENV HASHICORP_RELEASES=https://releases.hashicorp.com
 
 RUN set -eux && \
   apk add --no-cache curl gnupg openssl ca-certificates && \
-  gpg --keyserver pgp.mit.edu --recv-keys 91A6E7F85D05C65630BEF18951852D87348FFC4C && \
+  gpg --keyserver ha.pool.sks-keyservers.net --recv-keys 91A6E7F85D05C65630BEF18951852D87348FFC4C && \
   mkdir -p /tmp/build && \
   cd /tmp/build && \
   curl -L -o nomad_${NOMAD_VERSION}_linux_amd64.zip ${HASHICORP_RELEASES}/nomad/${NOMAD_VERSION}/nomad_${NOMAD_VERSION}_linux_amd64.zip && \
