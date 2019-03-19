@@ -42,7 +42,7 @@ RUN mkdir -p /nomad/data && \
 
 EXPOSE 4646 4647 4648 4648/udp
 
-ADD docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
-
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 ENTRYPOINT ["docker-entrypoint.sh"]
+
+CMD ["agent"]
