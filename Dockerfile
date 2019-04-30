@@ -33,7 +33,7 @@ RUN set -eux && \
   cd /tmp && \
   rm -rf /tmp/build && \
   apk del curl gnupg && \
-  rm -rf /root/.gnupg && \
+  sleep 1 && rm -rf /root/.gnupg && \
   # tiny smoke test to ensure the binary we downloaded runs
   nomad version
 
