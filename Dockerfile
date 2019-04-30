@@ -2,7 +2,7 @@ FROM alpine:3.9
 MAINTAINER NV <neovortex@gmail.com>
 
 # This is the release of Nomad to pull in.
-ENV NOMAD_VERSION=0.9.0
+ENV NOMAD_VERSION=0.9.1
 
 ENV GLIBC_VERSION=2.29-r0
 
