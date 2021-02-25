@@ -2,9 +2,9 @@ FROM alpine:3
 MAINTAINER NV <neovortex@gmail.com>
 
 # This is the release of Nomad to pull in.
-ENV NOMAD_VERSION=1.0.2
+ENV NOMAD_VERSION=1.0.4
 
-ENV GLIBC_VERSION=2.32-r0
+ENV GLIBC_VERSION=2.33-r0
 
 # This is the location of the releases.
 ENV HASHICORP_RELEASES=https://releases.hashicorp.com
